@@ -4,13 +4,24 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import ThemeToggle from '@/Components/ThemeToggle';
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
+    const flash = usePage().props.flash;
 
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
         useState(false);
+
+    useEffect(() => {
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+    }, [flash]);
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -30,6 +41,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('dashboard')}
                                 >
                                     Painel
+                                </NavLink>
+                                <NavLink
+                                    href={route('mindmaps.index')}
+                                    active={route().current('mindmaps.*')}
+                                >
+                                    Mapas Mentais
                                 </NavLink>
                             </div>
                         </div>
@@ -137,6 +154,12 @@ export default function AuthenticatedLayout({ header, children }) {
                         >
                             Painel
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('mindmaps.index')}
+                            active={route().current('mindmaps.*')}
+                        >
+                            Mapas Mentais
+                        </ResponsiveNavLink>
                     </div>
 
                     <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
@@ -174,6 +197,29 @@ export default function AuthenticatedLayout({ header, children }) {
             )}
 
             <main>{children}</main>
+
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 4000,
+                    style: {
+                        background: 'rgb(31 41 55)',
+                        color: '#fff',
+                    },
+                    success: {
+                        iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                        },
+                    },
+                    error: {
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#fff',
+                        },
+                    },
+                }}
+            />
         </div>
     );
 }

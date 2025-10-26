@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MindMapController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Mapas Mentais
+    Route::resource('mindmaps', MindMapController::class);
+    Route::post('mindmaps/import', [MindMapController::class, 'import'])->name('mindmaps.import');
+    Route::get('mindmaps/{mindmap}/export', [MindMapController::class, 'export'])->name('mindmaps.export');
 });
 
 require __DIR__.'/auth.php';

@@ -104,7 +104,7 @@ class MindMapController extends Controller
             'title' => 'sometimes|string|max:255',
             'nodes' => 'sometimes|array',
             'nodes.*.id' => 'required|exists:nodes,id',
-            'nodes.*.title' => 'required|string',
+            'nodes.*.title' => 'sometimes|string',
             'nodes.*.pos_x' => 'nullable|integer',
             'nodes.*.pos_y' => 'nullable|integer',
         ]);
@@ -119,16 +119,28 @@ class MindMapController extends Controller
             foreach ($validated['nodes'] as $nodeData) {
                 $node = $mindmap->nodes()->find($nodeData['id']);
                 if ($node) {
-                    $node->update([
-                        'title' => $nodeData['title'],
-                        'pos_x' => $nodeData['pos_x'] ?? null,
-                        'pos_y' => $nodeData['pos_y'] ?? null,
-                    ]);
+                    $updateData = [];
+
+                    if (isset($nodeData['title'])) {
+                        $updateData['title'] = $nodeData['title'];
+                    }
+
+                    if (isset($nodeData['pos_x'])) {
+                        $updateData['pos_x'] = $nodeData['pos_x'];
+                    }
+
+                    if (isset($nodeData['pos_y'])) {
+                        $updateData['pos_y'] = $nodeData['pos_y'];
+                    }
+
+                    if (!empty($updateData)) {
+                        $node->update($updateData);
+                    }
                 }
             }
         }
 
-        return back()->with('success', 'Mapa atualizado com sucesso!');
+        return back();
     }
 
     /**

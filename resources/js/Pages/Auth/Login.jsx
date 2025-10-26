@@ -25,6 +25,16 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Entrar" />
 
+            {/* Título */}
+            <div className="mb-8 text-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Bem-vindo de volta!
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Entre para acessar seus mapas mentais
+                </p>
+            </div>
+
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
                     {status}
@@ -74,7 +84,7 @@ export default function Login({ status, canResetPassword }) {
                                 setData('remember', e.target.checked)
                             }
                         />
-                        <span className="ms-2 text-sm text-gray-600">
+                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-300">
                             Lembrar-me
                         </span>
                     </label>
@@ -84,7 +94,7 @@ export default function Login({ status, canResetPassword }) {
                     {canResetPassword && (
                         <Link
                             href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            className="rounded-md text-sm text-gray-600 dark:text-gray-300 underline hover:text-purple-600 dark:hover:text-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
                         >
                             Esqueceu sua senha?
                         </Link>

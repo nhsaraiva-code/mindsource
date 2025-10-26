@@ -181,7 +181,7 @@ export default function Index({ mindmaps }) {
                                                     <div className="flex justify-end gap-2">
                                                         <Link
                                                             href={route('mindmaps.show', mindmap.id)}
-                                                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-800 transition-colors"
+                                                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800 transition-colors"
                                                         >
                                                             Abrir
                                                         </Link>
@@ -243,7 +243,7 @@ export default function Index({ mindmaps }) {
                                                         disabled={!link.url}
                                                         className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
                                                             link.active
-                                                                ? 'z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500'
+                                                                ? 'z-10 bg-purple-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 dark:bg-purple-500'
                                                                 : link.url
                                                                 ? 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700'
                                                                 : 'pointer-events-none text-gray-300 dark:text-gray-600'

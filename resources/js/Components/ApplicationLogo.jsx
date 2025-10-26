@@ -1,7 +1,26 @@
-import { FcMindMap } from 'react-icons/fc';
-
-export default function ApplicationLogo(props) {
+export default function ApplicationLogo({ className = "w-12 h-12", ...props }) {
     return (
-        <FcMindMap {...props} />
+        <svg
+            viewBox="0 0 48 48"
+            xmlns="http://www.w3.org/2000/svg"
+            className={className}
+            {...props}
+        >
+            {/* Polígono de linhas (mantido do original) */}
+            <polygon
+                fill="#CFD8DC"
+                points="39.4,23 38.6,19 26,21.6 26,8 22,8 22,20.3 8.1,11.3 5.9,14.7 21.1,24.5 9.4,39.8 12.6,42.2 23.9,27.4 32.3,40.1 35.7,37.9 27.3,25.4"
+            />
+
+            {/* Nó central (roxo escuro) */}
+            <circle cx="24" cy="24" r="7" fill="#7C3AED" />
+
+            {/* Nós externos (degradê de roxo) */}
+            <circle cx="24" cy="8" r="5" fill="#A855F7" />
+            <circle cx="39" cy="21" r="5" fill="#9333EA" />
+            <circle cx="7" cy="13" r="5" fill="#C084FC" />
+            <circle cx="11" cy="41" r="5" fill="#A855F7" />
+            <circle cx="34" cy="39" r="5" fill="#9333EA" />
+        </svg>
     );
 }

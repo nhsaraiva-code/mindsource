@@ -297,4 +297,58 @@ class MindMapController extends Controller
             return back()->with('error', 'Erro ao exportar: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Duplica um mapa mental com todos os seus nós
+     */
+    public function duplicate(Request $request, MindMap $mindmap)
+    {
+        Gate::authorize('view', $mindmap);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        // Criar novo mapa mental
+        $newMindmap = $request->user()->mindmaps()->create([
+            'title' => $validated['title'],
+            'map_version' => $mindmap->map_version,
+            'layout' => $mindmap->layout,
+        ]);
+
+        // Mapear IDs antigos para novos IDs
+        $nodeIdMap = [];
+
+        // Carregar todos os nós do mapa original
+        $originalNodes = $mindmap->nodes()->orderBy('rank')->get();
+
+        // Duplicar cada nó
+        foreach ($originalNodes as $originalNode) {
+            $newNode = $newMindmap->nodes()->create([
+                'title' => $originalNode->title,
+                'parent_id' => null, // Será atualizado depois
+                'rank' => $originalNode->rank,
+                'pos_x' => $originalNode->pos_x,
+                'pos_y' => $originalNode->pos_y,
+                'style' => $originalNode->style,
+            ]);
+
+            $nodeIdMap[$originalNode->id] = $newNode->id;
+        }
+
+        // Atualizar os parent_ids dos novos nós
+        foreach ($originalNodes as $originalNode) {
+            if ($originalNode->parent_id) {
+                $newNodeId = $nodeIdMap[$originalNode->id];
+                $newParentId = $nodeIdMap[$originalNode->parent_id];
+
+                $newMindmap->nodes()->find($newNodeId)->update([
+                    'parent_id' => $newParentId,
+                ]);
+            }
+        }
+
+        return redirect()->route('mindmaps.index')
+            ->with('success', 'Mapa mental duplicado com sucesso!');
+    }
 }

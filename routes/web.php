@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('mindmaps', MindMapController::class);
     Route::post('mindmaps/import', [MindMapController::class, 'import'])->name('mindmaps.import');
     Route::get('mindmaps/{mindmap}/export', [MindMapController::class, 'export'])->name('mindmaps.export');
+    Route::post('mindmaps/{mindmap}/duplicate', [MindMapController::class, 'duplicate'])->name('mindmaps.duplicate');
     Route::post('mindmaps/{mindmap}/nodes', [MindMapController::class, 'storeNode'])->name('mindmaps.nodes.store');
     Route::put('mindmaps/{mindmap}/nodes/{node}', [MindMapController::class, 'updateNode'])->name('mindmaps.nodes.update');
     Route::delete('mindmaps/{mindmap}/nodes/{node}', [MindMapController::class, 'deleteNode'])->name('mindmaps.nodes.delete');

@@ -14,10 +14,16 @@ export default function Index({ mindmaps }) {
     const [importing, setImporting] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
     const [mindmapToDelete, setMindmapToDelete] = useState(null);
+    const [mindmapToDuplicate, setMindmapToDuplicate] = useState(null);
     const fileInputRef = useRef(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
+        title: '',
+    });
+
+    const { data: duplicateData, setData: setDuplicateData, post: postDuplicate, processing: duplicateProcessing, errors: duplicateErrors, reset: resetDuplicate } = useForm({
         title: '',
     });
 
@@ -96,6 +102,31 @@ export default function Index({ mindmaps }) {
     const closeModal = () => {
         setShowCreateModal(false);
         reset();
+    };
+
+    const handleDuplicate = (mindmap) => {
+        setMindmapToDuplicate(mindmap);
+        setDuplicateData('title', `${mindmap.title} (cópia)`);
+        setShowDuplicateModal(true);
+    };
+
+    const handleDuplicateSubmit = (e) => {
+        e.preventDefault();
+
+        postDuplicate(route('mindmaps.duplicate', mindmapToDuplicate.id), {
+            onSuccess: () => {
+                resetDuplicate();
+                setShowDuplicateModal(false);
+                setMindmapToDuplicate(null);
+                toast.success('Mapa duplicado com sucesso!');
+            },
+        });
+    };
+
+    const closeDuplicateModal = () => {
+        setShowDuplicateModal(false);
+        setMindmapToDuplicate(null);
+        resetDuplicate();
     };
 
     return (
@@ -185,6 +216,12 @@ export default function Index({ mindmaps }) {
                                                         >
                                                             Abrir
                                                         </Link>
+                                                        <button
+                                                            onClick={() => handleDuplicate(mindmap)}
+                                                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 transition-colors"
+                                                        >
+                                                            Duplicar
+                                                        </button>
                                                         <a
                                                             href={route('mindmaps.export', mindmap.id)}
                                                             className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 transition-colors"
@@ -330,6 +367,46 @@ export default function Index({ mindmaps }) {
                         </button>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal show={showDuplicateModal} onClose={closeDuplicateModal} maxWidth="md">
+                <form onSubmit={handleDuplicateSubmit} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Duplicar Mapa Mental
+                    </h2>
+
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                        Duplicando: <span className="font-semibold text-gray-900 dark:text-gray-100">"{mindmapToDuplicate?.title}"</span>
+                    </p>
+
+                    <div className="mt-6">
+                        <InputLabel htmlFor="duplicate_title" value="Título do Novo Mapa" />
+
+                        <TextInput
+                            id="duplicate_title"
+                            type="text"
+                            className="mt-1 block w-full"
+                            value={duplicateData.title}
+                            onChange={(e) => setDuplicateData('title', e.target.value)}
+                            required
+                            isFocused
+                            autoComplete="off"
+                            placeholder="Digite o título do novo mapa mental"
+                        />
+
+                        <InputError className="mt-2" message={duplicateErrors.title} />
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-end gap-3">
+                        <SecondaryButton onClick={closeDuplicateModal} type="button">
+                            Cancelar
+                        </SecondaryButton>
+
+                        <PrimaryButton disabled={duplicateProcessing}>
+                            Duplicar Mapa
+                        </PrimaryButton>
+                    </div>
+                </form>
             </Modal>
         </AuthenticatedLayout>
     );

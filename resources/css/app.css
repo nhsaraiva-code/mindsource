@@ -20,13 +20,14 @@
     border: none !important;
     padding: 0 !important;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible !important;
 }
 
 .react-flow__node {
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
+    overflow: visible !important;
 }
 
 .dark .react-flow__edge-path {

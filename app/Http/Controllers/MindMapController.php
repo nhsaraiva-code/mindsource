@@ -144,6 +144,71 @@ class MindMapController extends Controller
     }
 
     /**
+     * Cria um novo nó no mapa mental
+     */
+    public function storeNode(Request $request, MindMap $mindmap)
+    {
+        Gate::authorize('update', $mindmap);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:nodes,id',
+        ]);
+
+        // Calcular o rank baseado no pai
+        $rank = 0;
+        if (isset($validated['parent_id'])) {
+            $parent = $mindmap->nodes()->find($validated['parent_id']);
+            $rank = $parent ? $parent->rank + 1 : 0;
+        }
+
+        $node = $mindmap->nodes()->create([
+            'title' => $validated['title'],
+            'parent_id' => $validated['parent_id'] ?? null,
+            'rank' => $rank,
+        ]);
+
+        return back();
+    }
+
+    /**
+     * Atualiza um nó específico
+     */
+    public function updateNode(Request $request, MindMap $mindmap, $nodeId)
+    {
+        Gate::authorize('update', $mindmap);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $node = $mindmap->nodes()->findOrFail($nodeId);
+
+        // Se o título estiver vazio e for um nó temporário, deletar
+        if (empty(trim($validated['title']))) {
+            $node->delete();
+            return back();
+        }
+
+        $node->update(['title' => $validated['title']]);
+
+        return back();
+    }
+
+    /**
+     * Deleta um nó específico
+     */
+    public function deleteNode(MindMap $mindmap, $nodeId)
+    {
+        Gate::authorize('update', $mindmap);
+
+        $node = $mindmap->nodes()->findOrFail($nodeId);
+        $node->delete();
+
+        return back();
+    }
+
+    /**
      * Deleta mapa
      */
     public function destroy(MindMap $mindmap)

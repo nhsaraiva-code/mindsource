@@ -16,7 +16,36 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = auth()->user();
+
+    // Buscar todos os mapas do usuário com seus nós
+    $mindmaps = $user->mindmaps()->withCount('nodes')->get();
+
+    // Calcular estatísticas
+    $stats = [
+        'total_mindmaps' => $mindmaps->count(),
+        'total_nodes' => $mindmaps->sum('nodes_count'),
+        'most_recent' => $mindmaps->sortByDesc('updated_at')->first(),
+        'largest_map' => $mindmaps->sortByDesc('nodes_count')->first(),
+    ];
+
+    // Buscar mapas recentes (últimos 4)
+    $recentMindmaps = $user->mindmaps()
+        ->withCount('nodes')
+        ->latest('updated_at')
+        ->limit(4)
+        ->get()
+        ->map(fn($map) => [
+            'id' => $map->id,
+            'title' => $map->title,
+            'nodes_count' => $map->nodes_count,
+            'updated_at' => $map->updated_at->format('d/m/Y H:i'),
+        ]);
+
+    return Inertia::render('Dashboard', [
+        'stats' => $stats,
+        'recentMindmaps' => $recentMindmaps,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

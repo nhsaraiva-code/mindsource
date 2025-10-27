@@ -70,12 +70,6 @@ const CollapsibleNode = memo(({ data, selected }) => {
         }
     };
 
-    const handleDoubleClick = (e) => {
-        if (!isEditing) {
-            data.onStartEditing?.();
-        }
-    };
-
     const handleAddChild = (e) => {
         e.stopPropagation();
         data.onAddChild?.();
@@ -125,7 +119,6 @@ const CollapsibleNode = memo(({ data, selected }) => {
     return (
         <div
             className="px-3 py-2 shadow-sm relative"
-            onDoubleClick={handleDoubleClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             style={{
@@ -328,8 +321,6 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
     const [layouted, setLayouted] = useState(false);
     const [isPanMode, setIsPanMode] = useState(false);
     const [editingNodeId, setEditingNodeId] = useState(null);
-    const [lastClickTime, setLastClickTime] = useState(0);
-    const [lastClickNodeId, setLastClickNodeId] = useState(null);
     const [tempNodes, setTempNodes] = useState([]);
     const { fitView, setCenter } = useReactFlow();
 
@@ -416,14 +407,46 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
             return {
                 id: nodeId,
                 type: 'collapsible',
+                draggable: false,
                 data: {
                     label: node.title,
                     childrenCount,
                     isCollapsed: collapsedNodes.has(nodeId),
                     isEditing: false,
+                    isRoot: !node.parent_id,
                     onToggle: () => toggleNode(nodeId),
                     onUpdate: null, // Será definido após useNodesState
                     onStopEditing: () => {},
+                    onStartEditing: () => {},
+                    onAddChild: () => {
+                        const tempId = `temp-${Date.now()}`;
+                        const tempNode = {
+                            id: tempId,
+                            parent_id: parseInt(nodeId),
+                            title: '',
+                            rank: node.rank + 1,
+                            pos_x: 0,
+                            pos_y: 0,
+                            isTemp: true,
+                        };
+                        setTempNodes(prev => [...prev, tempNode]);
+                        setEditingNodeId(tempId);
+                    },
+                    onAddSibling: () => {
+                        const tempId = `temp-${Date.now()}`;
+                        const tempNode = {
+                            id: tempId,
+                            parent_id: node.parent_id,
+                            title: '',
+                            rank: node.rank,
+                            pos_x: 0,
+                            pos_y: 0,
+                            isTemp: true,
+                        };
+                        setTempNodes(prev => [...prev, tempNode]);
+                        setEditingNodeId(tempId);
+                    },
+                    onDelete: () => deleteNodeWithConfirmation(nodeId),
                 },
                 position: {
                     x: node.pos_x || 0,
@@ -558,13 +581,20 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
         [setEdges]
     );
 
-    // Handler para detectar duplo clique
+    // Ref para armazenar informações do último clique
+    const lastClickRef = useRef({ nodeId: null, time: 0 });
+
+    // Handler para detectar duplo clique manualmente
     const handleNodeClick = useCallback((event, node) => {
         const now = Date.now();
-        const timeDiff = now - lastClickTime;
+        const timeDiff = now - lastClickRef.current.time;
+        const isSameNode = lastClickRef.current.nodeId === node.id;
 
-        // Se o clique foi no mesmo nó e dentro de 500ms, é um duplo clique
-        if (lastClickNodeId === node.id && timeDiff < 500) {
+        // Se clicou no mesmo nó em menos de 300ms, é duplo clique
+        if (isSameNode && timeDiff < 300) {
+            // Resetar o ref para evitar triplo clique
+            lastClickRef.current = { nodeId: null, time: 0 };
+
             // Ativar modo de edição
             setEditingNodeId(node.id);
             setNodes((nodes) =>
@@ -576,16 +606,11 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
                     },
                 }))
             );
-
-            // Resetar o contador
-            setLastClickTime(0);
-            setLastClickNodeId(null);
         } else {
-            // Armazenar o tempo e ID do clique
-            setLastClickTime(now);
-            setLastClickNodeId(node.id);
+            // Armazenar informações do clique atual
+            lastClickRef.current = { nodeId: node.id, time: now };
         }
-    }, [lastClickTime, lastClickNodeId, setNodes]);
+    }, [setNodes]);
 
     // Função para salvar nó temporário
     const saveTempNode = useCallback((tempId, title) => {
@@ -619,11 +644,19 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
                         const newNodes = page.props.mindmap.nodes;
                         // Encontrar o nó recém-criado (último nó adicionado)
                         const createdNode = newNodes[newNodes.length - 1];
+                        const newNodeId = String(createdNode.id);
 
-                        // Atualizar o nó temporário com o ID real do servidor
+                        // Atualizar o nó temporário com o ID real do servidor e a função onUpdate correta
                         setNodes(nodes => nodes.map(node =>
                             node.id === tempId
-                                ? { ...node, id: String(createdNode.id) }
+                                ? {
+                                    ...node,
+                                    id: newNodeId,
+                                    data: {
+                                        ...node.data,
+                                        onUpdate: (newTitle) => updateNodeTitle(newNodeId, newTitle),
+                                    }
+                                }
                                 : node
                         ));
                     }
@@ -638,25 +671,56 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
 
     // Atualizar nós quando collapsedNodes ou tempNodes mudarem
     useEffect(() => {
+        // Combinar nós do banco com nós temporários
+        const allNodes = [...mindmap.nodes, ...tempNodes];
+
+        // Reconstruir childrenMap incluindo nós temporários
+        const updatedChildrenMap = {};
+        allNodes.forEach((node) => {
+            if (node.parent_id) {
+                const parentId = String(node.parent_id);
+                if (!updatedChildrenMap[parentId]) {
+                    updatedChildrenMap[parentId] = [];
+                }
+                updatedChildrenMap[parentId].push(String(node.id));
+            }
+        });
+
+        // Função para obter filhos diretos usando o mapa atualizado
+        const getDirectChildrenUpdated = (nodeId) => {
+            return updatedChildrenMap[nodeId] || [];
+        };
+
+        // Função para obter descendentes ocultos usando o mapa atualizado
+        const getHiddenDescendantsUpdated = (nodeId) => {
+            const hidden = new Set();
+            const directChildren = getDirectChildrenUpdated(nodeId);
+
+            directChildren.forEach((childId) => {
+                hidden.add(childId);
+                const childDescendants = getHiddenDescendantsUpdated(childId);
+                childDescendants.forEach((id) => hidden.add(id));
+            });
+
+            return hidden;
+        };
+
         const hiddenNodes = new Set();
         collapsedNodes.forEach((nodeId) => {
-            const directChildren = getDirectChildren(nodeId);
+            const directChildren = getDirectChildrenUpdated(nodeId);
             directChildren.forEach((childId) => {
                 hiddenNodes.add(childId);
                 // Adicionar todos os descendentes deste filho também
-                const childDescendants = getHiddenDescendants(childId);
+                const childDescendants = getHiddenDescendantsUpdated(childId);
                 childDescendants.forEach((id) => hiddenNodes.add(id));
             });
         });
-
-        // Combinar nós do banco com nós temporários
-        const allNodes = [...mindmap.nodes, ...tempNodes];
 
         const updatedNodes = allNodes
             .filter((node) => !hiddenNodes.has(String(node.id)))
             .map((node) => {
                 const nodeId = String(node.id);
-                const childrenCount = (childrenMap[nodeId] || []).length;
+                const childrenCount = (updatedChildrenMap[nodeId] || []).length;
                 // Preservar o estado de edição do nó se existir
                 const existingNode = nodes.find(n => n.id === nodeId);
                 const isEditing = existingNode?.data?.isEditing || (editingNodeId === nodeId) || false;
@@ -667,6 +731,7 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
                 return {
                     id: nodeId,
                     type: 'collapsible',
+                    draggable: false,
                     data: {
                         label: node.title || '',
                         childrenCount,
@@ -763,7 +828,7 @@ function MindMapFlow({ mindmap, isFullscreen = false }) {
             setNodes(layoutedNodes);
             setEdges(layoutedEdges);
         });
-    }, [collapsedNodes, tempNodes, editingNodeId]);
+    }, [collapsedNodes, tempNodes]);
 
     // Aplicar layout hierárquico apenas se os nós não têm posições salvas
     useEffect(() => {

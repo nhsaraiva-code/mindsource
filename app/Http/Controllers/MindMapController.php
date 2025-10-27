@@ -61,7 +61,7 @@ class MindMapController extends Controller
             'rank' => 0,
         ]);
 
-        return redirect()->route('mindmaps.index')
+        return redirect()->route('mindmaps.show', $mindmap->id)
             ->with('success', 'Mapa mental criado com sucesso!');
     }
 

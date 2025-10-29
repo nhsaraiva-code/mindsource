@@ -57,12 +57,9 @@ export default function Index({ mindmaps }) {
         formData.append('file', file);
 
         try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
             const response = await axios.post(route('mindmaps.import'), formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
                 },
             });
 

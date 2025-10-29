@@ -53,14 +53,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Mapas Mentais
-    Route::resource('mindmaps', MindMapController::class);
+    // Mapas Mentais - rotas personalizadas devem vir ANTES do resource
     Route::post('mindmaps/import', [MindMapController::class, 'import'])->name('mindmaps.import');
     Route::get('mindmaps/{mindmap}/export', [MindMapController::class, 'export'])->name('mindmaps.export');
     Route::post('mindmaps/{mindmap}/duplicate', [MindMapController::class, 'duplicate'])->name('mindmaps.duplicate');
     Route::post('mindmaps/{mindmap}/nodes', [MindMapController::class, 'storeNode'])->name('mindmaps.nodes.store');
     Route::put('mindmaps/{mindmap}/nodes/{node}', [MindMapController::class, 'updateNode'])->name('mindmaps.nodes.update');
     Route::delete('mindmaps/{mindmap}/nodes/{node}', [MindMapController::class, 'deleteNode'])->name('mindmaps.nodes.delete');
+    Route::resource('mindmaps', MindMapController::class);
 });
 
 require __DIR__.'/auth.php';

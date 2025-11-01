@@ -12,7 +12,7 @@ sudo apt update
 
 ```bash
 sudo apt upgrade -y
-sudo apt install -y nginx php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring php8.2-curl php8.2-zip php8.2-bcmath unzip git curl redis-server
+sudo apt install -y nginx php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring php8.2-curl php8.2-zip php8.2-bcmath php8.2-redis unzip git curl redis-server
 ```
 
 ## 3. Instalar Composer
@@ -56,27 +56,6 @@ php artisan key:generate
 Editar `.env`:
 ```bash
 sudo nano .env
-```
-
-```ini
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=http://seu-dominio.com
-
-DB_CONNECTION=mysql
-DB_HOST=seu-rds-endpoint.rds.amazonaws.com
-DB_PORT=3306
-DB_DATABASE=mindsource
-DB_USERNAME=admin
-DB_PASSWORD=sua-senha-do-rds
-
-SESSION_DRIVER=redis
-CACHE_STORE=redis
-QUEUE_CONNECTION=database
-
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
 ```
 
 ## 8. Executar migrations
@@ -138,6 +117,7 @@ server {
 ```
 
 ```bash
+sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/mindsource /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx

@@ -135,6 +135,7 @@ sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/mindsource /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
+sudo systemctl restart php8.2-fpm
 ```
 
 ## 11. Configurar Firewall

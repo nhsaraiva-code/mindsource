@@ -32,9 +32,8 @@ sudo apt install -y nodejs
 ## 5. Clonar e configurar aplicação
 
 ```bash
-cd /var/www
-sudo git clone https://github.com/nhsaraiva-code/mindsource.git mindsource
-sudo chown -R $USER:$USER mindsource
+cd /home/ubuntu
+git clone https://github.com/nhsaraiva-code/mindsource.git mindsource
 cd mindsource
 ```
 
@@ -55,8 +54,10 @@ php artisan key:generate
 
 Editar `.env`:
 ```bash
-sudo nano .env
+nano .env
 ```
+
+Configure as variáveis de ambiente (principalmente banco de dados e Redis).
 
 ## 8. Executar migrations
 
@@ -70,10 +71,23 @@ php artisan view:cache
 ## 9. Configurar permissões
 
 ```bash
-sudo chown -R www-data:www-data /var/www/mindsource
-sudo chmod -R 755 /var/www/mindsource
-sudo chmod -R 775 /var/www/mindsource/storage
-sudo chmod -R 775 /var/www/mindsource/bootstrap/cache
+# Adicionar www-data ao grupo ubuntu
+sudo usermod -a -G ubuntu www-data
+
+# Permitir grupo acessar a home do ubuntu
+chmod 755 /home/ubuntu
+
+# Configurar permissões da aplicação
+chmod -R 755 /home/ubuntu/mindsource
+
+# Storage e cache precisam de escrita para www-data
+chmod -R 775 /home/ubuntu/mindsource/storage
+chmod -R 775 /home/ubuntu/mindsource/bootstrap/cache
+
+# Garantir que novos arquivos herdam permissões de grupo
+chgrp -R ubuntu /home/ubuntu/mindsource
+chmod g+s /home/ubuntu/mindsource/storage
+chmod g+s /home/ubuntu/mindsource/bootstrap/cache
 ```
 
 ## 10. Configurar Nginx
@@ -86,7 +100,7 @@ sudo nano /etc/nginx/sites-available/mindsource
 server {
     listen 80;
     server_name seu-dominio.com;
-    root /var/www/mindsource/public;
+    root /home/ubuntu/mindsource/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
@@ -134,7 +148,7 @@ sudo ufw enable
 ## Atualização da aplicação
 
 ```bash
-cd /var/www/mindsource
+cd /home/ubuntu/mindsource
 git pull
 composer install --optimize-autoloader --no-dev
 npm install
@@ -142,6 +156,7 @@ npm run build
 php artisan migrate --force
 php artisan route:cache
 php artisan view:cache
+sudo systemctl restart php8.2-fpm
 ```
 
 ## Troubleshooting
@@ -149,7 +164,7 @@ php artisan view:cache
 ### Verificar logs
 ```bash
 # Logs do Laravel
-tail -f /var/www/mindsource/storage/logs/laravel.log
+tail -f /home/ubuntu/mindsource/storage/logs/laravel.log
 
 # Logs do Nginx
 sudo tail -f /var/log/nginx/error.log
@@ -168,8 +183,8 @@ php artisan view:clear
 
 ### Permissões
 ```bash
-sudo chown -R www-data:www-data /var/www/mindsource
-sudo chmod -R 755 /var/www/mindsource
-sudo chmod -R 775 /var/www/mindsource/storage
-sudo chmod -R 775 /var/www/mindsource/bootstrap/cache
+chmod -R 755 /home/ubuntu/mindsource
+chmod -R 775 /home/ubuntu/mindsource/storage
+chmod -R 775 /home/ubuntu/mindsource/bootstrap/cache
+chgrp -R ubuntu /home/ubuntu/mindsource
 ```

@@ -1,36 +1,44 @@
 # Instalação na EC2 (Ubuntu/Debian)
 
-## 1. Atualizar sistema e instalar dependências
+## 1. Adicionar repositório do PHP
 
 ```bash
-sudo apt update && sudo apt upgrade -y
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php -y
+sudo apt update
+```
+
+## 2. Atualizar sistema e instalar dependências
+
+```bash
+sudo apt upgrade -y
 sudo apt install -y nginx php8.2-fpm php8.2-mysql php8.2-xml php8.2-mbstring php8.2-curl php8.2-zip php8.2-bcmath unzip git curl redis-server
 ```
 
-## 2. Instalar Composer
+## 3. Instalar Composer
 
 ```bash
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 ```
 
-## 3. Instalar Node.js 22.x
+## 4. Instalar Node.js 22.x
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
-## 4. Clonar e configurar aplicação
+## 5. Clonar e configurar aplicação
 
 ```bash
 cd /var/www
-sudo git clone git@github.com:nhsaraiva-code/mindsource.git mindsource
-sudo chown -R www-data:www-data mindsource
+sudo git clone https://github.com/nhsaraiva-code/mindsource.git mindsource
+sudo chown -R $USER:$USER mindsource
 cd mindsource
 ```
 
-## 5. Instalar dependências
+## 6. Instalar dependências
 
 ```bash
 composer install --optimize-autoloader --no-dev
@@ -38,7 +46,7 @@ npm install
 npm run build
 ```
 
-## 6. Configurar ambiente
+## 7. Configurar ambiente
 
 ```bash
 cp .env.example .env
@@ -71,7 +79,7 @@ REDIS_PASSWORD=null
 REDIS_PORT=6379
 ```
 
-## 7. Executar migrations
+## 8. Executar migrations
 
 ```bash
 php artisan migrate --force
@@ -80,7 +88,7 @@ php artisan route:cache
 php artisan view:cache
 ```
 
-## 8. Configurar permissões
+## 9. Configurar permissões
 
 ```bash
 sudo chown -R www-data:www-data /var/www/mindsource
@@ -89,7 +97,7 @@ sudo chmod -R 775 /var/www/mindsource/storage
 sudo chmod -R 775 /var/www/mindsource/bootstrap/cache
 ```
 
-## 9. Configurar Nginx
+## 10. Configurar Nginx
 
 ```bash
 sudo nano /etc/nginx/sites-available/mindsource
@@ -135,7 +143,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-## 10. Configurar Firewall
+## 11. Configurar Firewall
 
 ```bash
 sudo ufw allow 'Nginx Full'
